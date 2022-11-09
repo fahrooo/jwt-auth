@@ -24,7 +24,9 @@ export const getUsers = async (req, res) => {
       ],
     },
   });
+  
   const totalPage = Math.ceil(totalRows / limit);
+  
   try {
     const users = await Users.findAll({
       where: {
@@ -45,19 +47,23 @@ export const getUsers = async (req, res) => {
       limit: limit,
       attributes: ["id", "name", "email"],
     });
-    res.json({
+    
+    res.status(200).json({
+      status: 200,
+      msg: "Data Found",
       data: users,
       page: page + 1,
       limit: limit,
       rows: users.length,
-      totalData: totalRows,
+      totalRows: totalRows,
       totalPage: totalPage,
     });
   } catch (error) {
-    return res.status(500).json({ 
-      data: null,
+    return res.status(500).json({
       status: 500,
-      msg: "Internal Server Error" });
+      msg: "Internal Server Error",
+      data: null,
+    });
   }
 };
 
@@ -141,7 +147,7 @@ export const Login = async (req, res) => {
 export const Logout = async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
-    return res.sendStatus(204);
+    return res.status(404).json({ status: 404, msg: "Token Not Found" });
   }
 
   const user = await Users.findAll({
@@ -151,13 +157,13 @@ export const Logout = async (req, res) => {
   });
 
   if (!user[0]) {
-    return res.sendStatus(204);
+    return res.status(204);
   }
 
   const userId = user[0].id;
 
   await Users.update(
-    { refreshToken: null },
+    { refresh_token: null },
     {
       where: {
         id: userId,
@@ -166,5 +172,5 @@ export const Logout = async (req, res) => {
   );
 
   res.clearCookie("refreshToken");
-  return res.sendStatus(200);
+  return res.status(200).json({ status: 200, msg: "Clear Token Successful" });
 };
