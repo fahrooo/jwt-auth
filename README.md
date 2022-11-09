@@ -1,3 +1,3 @@
 # Sistem Otentikasi JWT
 
-JWT-Auth adalah proses pada bagian backend untuk sistem otentikasi pada endpoint API
+JWT-Auth adalah proses pada bagian backend untuk sistem otentikasi pada endpoint API ditambah paginitation dan filter search
