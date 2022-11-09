@@ -1,13 +1,57 @@
 import Users from "../model/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { Op } from "sequelize";
 
 export const getUsers = async (req, res) => {
+  const search = req.body.search || "";
+  const page = parseInt(req.body.page) || 0;
+  const limit = parseInt(req.body.limit) || 0;
+  const offset = limit * page;
+  const totalRows = await Users.count({
+    where: {
+      [Op.or]: [
+        {
+          name: {
+            [Op.like]: "%" + search + "%",
+          },
+        },
+        {
+          email: {
+            [Op.like]: "%" + search + "%",
+          },
+        },
+      ],
+    },
+  });
+  const totalPage = Math.ceil(totalRows / limit);
   try {
     const users = await Users.findAll({
+      where: {
+        [Op.or]: [
+          {
+            name: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+          {
+            email: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+        ],
+      },
+      offset: offset,
+      limit: limit,
       attributes: ["id", "name", "email"],
     });
-    res.json(users);
+    res.json({
+      data: users,
+      page: page,
+      limit: limit,
+      totalRows: totalRows,
+      totalPage: totalPage,
+    });
   } catch (error) {
     console.log(error);
   }
@@ -95,19 +139,19 @@ export const Logout = async (req, res) => {
   if (!refreshToken) {
     return res.sendStatus(204);
   }
-  
+
   const user = await Users.findAll({
     where: {
       refresh_token: refreshToken,
     },
   });
-  
+
   if (!user[0]) {
     return res.sendStatus(204);
   }
-  
+
   const userId = user[0].id;
-  
+
   await Users.update(
     { refreshToken: null },
     {
@@ -116,7 +160,7 @@ export const Logout = async (req, res) => {
       },
     }
   );
-  
+
   res.clearCookie("refreshToken");
   return res.sendStatus(200);
 };

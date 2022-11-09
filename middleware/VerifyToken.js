@@ -10,7 +10,7 @@ export const verifyToken = (req, res, next) => {
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res.sendStatus(403);
+      return res.status(403).json({ status: 403, msg: "Expired Token" });
     }
     req.email = decoded.email;
     next();
