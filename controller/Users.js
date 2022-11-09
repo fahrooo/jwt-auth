@@ -4,9 +4,9 @@ import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 
 export const getUsers = async (req, res) => {
-  const search = req.body.search || "";
-  const page = parseInt(req.body.page) || 0;
-  const limit = parseInt(req.body.limit) || 0;
+  const search = req.body.search;
+  const page = parseInt(req.body.page) - 1;
+  const limit = parseInt(req.body.limit);
   const offset = limit * page;
   const totalRows = await Users.count({
     where: {
@@ -47,13 +47,17 @@ export const getUsers = async (req, res) => {
     });
     res.json({
       data: users,
-      page: page,
+      page: page + 1,
       limit: limit,
-      totalRows: totalRows,
+      rows: users.length,
+      totalData: totalRows,
       totalPage: totalPage,
     });
   } catch (error) {
-    console.log(error);
+    return res.status(500).json({ 
+      data: null,
+      status: 500,
+      msg: "Internal Server Error" });
   }
 };
 
