@@ -24,9 +24,9 @@ export const getUsers = async (req, res) => {
       ],
     },
   });
-  
+
   const totalPage = Math.ceil(totalRows / limit);
-  
+
   try {
     const users = await Users.findAll({
       where: {
@@ -47,7 +47,7 @@ export const getUsers = async (req, res) => {
       limit: limit,
       attributes: ["id", "name", "email"],
     });
-    
+
     res.status(200).json({
       status: 200,
       msg: "Data Found",
@@ -85,7 +85,7 @@ export const Register = async (req, res) => {
       email: email,
       password: hashPassword,
     });
-    res.json({ msg: "Register Berhasil" });
+    res.status(201).json({ status: 201, msg: "Register Berhasil" });
   } catch (error) {
     console.log(error);
   }
@@ -102,7 +102,7 @@ export const Login = async (req, res) => {
     const match = await bcrypt.compare(req.body.password, user[0].password);
 
     if (!match) {
-      return res.status(400).json({ msg: "Wrong Password" });
+      return res.status(400).json({ status: 400, msg: "Wrong Password" });
     }
 
     const userId = user[0].id;

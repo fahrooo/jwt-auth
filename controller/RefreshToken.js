@@ -6,7 +6,7 @@ export const refreshToken = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-      return res.sendStatus(401);
+      return res.status(401).json({ status: 401, msg: "Authentication Failed" });
     }
 
     const user = await Users.findAll({
@@ -16,7 +16,7 @@ export const refreshToken = async (req, res) => {
     });
 
     if (!user[0]) {
-      return res.sendStatus(403);
+      return res.status(403).json({ status: 403, msg: "Expired Token" });
     }
 
     jwt.verify(
@@ -24,7 +24,7 @@ export const refreshToken = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET,
       (err, decoded) => {
         if (err) {
-          return res.sendStatus(403);
+          return res.status(403).json({ status: 403, msg: "Expired Token" });
         }
         const userId = user[0].id;
         const name = user[0].name;
@@ -33,7 +33,7 @@ export const refreshToken = async (req, res) => {
           { userId, name, email },
           process.env.ACCESS_TOKEN_SECRET,
           {
-            expiresIn: "1d",
+            expiresIn: "20s",
           }
         );
         res.json({ accessToken });
