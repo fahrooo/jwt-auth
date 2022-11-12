@@ -1,71 +1,7 @@
 import Users from "../model/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Op } from "sequelize";
-
-export const getUsers = async (req, res) => {
-  const search = req.body.search;
-  const page = parseInt(req.body.page) - 1;
-  const limit = parseInt(req.body.limit);
-  const offset = limit * page;
-  const totalRows = await Users.count({
-    where: {
-      [Op.or]: [
-        {
-          name: {
-            [Op.like]: "%" + search + "%",
-          },
-        },
-        {
-          email: {
-            [Op.like]: "%" + search + "%",
-          },
-        },
-      ],
-    },
-  });
-
-  const totalPage = Math.ceil(totalRows / limit);
-
-  try {
-    const users = await Users.findAll({
-      where: {
-        [Op.or]: [
-          {
-            name: {
-              [Op.like]: "%" + search + "%",
-            },
-          },
-          {
-            email: {
-              [Op.like]: "%" + search + "%",
-            },
-          },
-        ],
-      },
-      offset: offset,
-      limit: limit,
-      attributes: ["id", "name", "email"],
-    });
-
-    res.status(200).json({
-      status: 200,
-      msg: "Data Found",
-      data: users,
-      page: page + 1,
-      limit: limit,
-      rows: users.length,
-      totalRows: totalRows,
-      totalPage: totalPage,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      status: 500,
-      msg: "Internal Server Error",
-      data: null,
-    });
-  }
-};
+import { Op, where } from "sequelize";
 
 export const Register = async (req, res) => {
   const { name, email, password, confPassword } = req.body;
@@ -138,7 +74,7 @@ export const Login = async (req, res) => {
       maxAge: 60 * 60 * 24 * 1000,
     });
 
-    res.json({ accessToken });
+    res.status(200).json({ accessToken, data: { id: userId, name, email } });
   } catch (error) {
     res.status(404).json({ msg: "Email not found" });
   }
@@ -174,3 +110,135 @@ export const Logout = async (req, res) => {
   res.clearCookie("refreshToken");
   return res.status(200).json({ status: 200, msg: "Clear Token Successful" });
 };
+
+export const getUsers = async (req, res) => {
+  const search = req.body.search;
+  const page = parseInt(req.body.page) - 1;
+  const limit = parseInt(req.body.limit);
+  const offset = limit * page;
+  const totalRows = await Users.count({
+    where: {
+      [Op.or]: [
+        {
+          name: {
+            [Op.like]: "%" + search + "%",
+          },
+        },
+        {
+          email: {
+            [Op.like]: "%" + search + "%",
+          },
+        },
+      ],
+    },
+  });
+
+  const totalPage = Math.ceil(totalRows / limit);
+
+  try {
+    const users = await Users.findAll({
+      where: {
+        [Op.or]: [
+          {
+            name: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+          {
+            email: {
+              [Op.like]: "%" + search + "%",
+            },
+          },
+        ],
+      },
+      offset: offset,
+      limit: limit,
+      attributes: ["id", "name", "email"],
+    });
+
+    res.status(200).json({
+      status: 200,
+      msg: "Data Found",
+      data: users,
+      page: page + 1,
+      limit: limit,
+      rows: users.length,
+      totalRows: totalRows,
+      totalPage: totalPage,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      msg: "Internal Server Error",
+      data: null,
+    });
+  }
+};
+
+export const putUsers = async (req, res) => {
+  const { id, name, email } = req.body;
+  try {
+    const userbyId = await Users.findAll({
+      where: {
+        id: id,
+      },
+      attributes: ["id", "name", "email"],
+    });
+
+    if (userbyId.length > 0) {
+      const user = await Users.update(
+        {
+          name: name,
+          email: email,
+        },
+        {
+          where: {
+            id: id,
+          },
+        }
+      );
+
+      res.status(200).json({
+        status: 200,
+        msg: "Data Updated Successfully",
+        data: { ...req.body },
+      });
+    } else {
+      res.status(404).json({ status: 404, msg: "Data Not Found" });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, msg: error.message });
+  }
+};
+
+export const deleteUsers = async (req, res) => {
+  try {
+    const id = req.params.id
+    
+    const userbyId = await Users.findAll({
+      where: {
+        id: id,
+      },
+      attributes: ["id", "name", "email"],
+    });
+
+    if (userbyId.length > 0) {
+      const user = await Users.destroy(
+        {
+          where: {
+            id: id,
+          },
+        }
+      );
+
+      res.status(200).json({
+        status: 200,
+        msg: "Data Deleted successfully",
+      });
+    } else {
+      res.status(404).json({ status: 404, msg: "Data Not Found" });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, msg: error.message });
+  }
+}
