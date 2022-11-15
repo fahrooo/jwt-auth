@@ -74,7 +74,7 @@ export const Login = async (req, res) => {
       maxAge: 60 * 60 * 24 * 1000,
     });
 
-    res.status(200).json({ accessToken, data: { id: userId, name, email } });
+    res.status(200).json({ data: { id: userId, name, email }, accessToken });
   } catch (error) {
     res.status(404).json({ msg: "Email not found" });
   }
@@ -156,10 +156,10 @@ export const getUsers = async (req, res) => {
       attributes: ["id", "name", "email"],
     });
 
-    res.status(200).json({
-      status: 200,
-      msg: "Data Found",
-      data: users,
+    res.status(users.length ? 200 : 404).json({
+      status: users.length ? 200 : 404,
+      msg: users.length ? "Data Found" : "Data Not Found",
+      data: users.length ? users : null,
       page: page + 1,
       limit: limit,
       rows: users.length,
