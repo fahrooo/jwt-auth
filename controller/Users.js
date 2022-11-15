@@ -21,7 +21,9 @@ export const Register = async (req, res) => {
       email: email,
       password: hashPassword,
     });
-    res.status(201).json({ status: 201, msg: "Register Berhasil", data: {name, email} });
+    res
+      .status(201)
+      .json({ status: 201, msg: "Register Berhasil", data: { name, email } });
   } catch (error) {
     console.log(error);
   }
@@ -162,9 +164,10 @@ export const getUsers = async (req, res) => {
       data: users.length ? users : null,
       page: page + 1,
       limit: limit,
-      rows: users.length,
-      totalRows: totalRows,
-      totalPage: totalPage,
+      rows: offset + 1,
+      rowsPage: (offset + 1) + (users.length) - 1,
+      totalRows: users.length ? totalRows : null,
+      totalPage: users.length ? totalPage : null,
     });
   } catch (error) {
     return res.status(500).json({
@@ -213,8 +216,8 @@ export const putUsers = async (req, res) => {
 
 export const deleteUsers = async (req, res) => {
   try {
-    const id = req.params.id
-    
+    const id = req.params.id;
+
     const userbyId = await Users.findAll({
       where: {
         id: id,
@@ -223,13 +226,11 @@ export const deleteUsers = async (req, res) => {
     });
 
     if (userbyId.length > 0) {
-      const user = await Users.destroy(
-        {
-          where: {
-            id: id,
-          },
-        }
-      );
+      const user = await Users.destroy({
+        where: {
+          id: id,
+        },
+      });
 
       res.status(200).json({
         status: 200,
@@ -241,4 +242,4 @@ export const deleteUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({ status: 500, msg: error.message });
   }
-}
+};
